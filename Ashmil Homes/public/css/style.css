@@ -1,0 +1,12 @@
+body { margin: 0; font-family: 'Manrope', sans-serif; }
+.bg-navy { background-color: #0A1A2F; }
+.bg-navy-deep { background-color: #051020; }
+.bg-gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); }
+.bg-gradient-hero { background: linear-gradient(90deg, rgba(5,16,32,0.85) 0%, rgba(5,16,32,0.4) 100%); }
+.text-gold { color: #D4AF37; }
+.text-navy { color: #0A1A2F; }
+.shadow-gold { box-shadow: 0 4px 14px 0 rgba(212,175,55,0.3); }
+.animate-ken-burns { animation: kenBurns 20s infinite alternate; }
+@keyframes kenBurns { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+.transition-smooth { transition: all 0.3s ease; }
+.hover\:shadow-elegant:hover { box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); }
