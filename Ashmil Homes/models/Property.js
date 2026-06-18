@@ -14,6 +14,7 @@ const propertySchema = new mongoose.Schema({
   bathrooms: { type: Number, default: 0 },
   area: { type: String, default: '' },
   images: [{ type: String }], // relative path: /uploads/filename.jpg
+  video: { type: String, default: '' }, // stores YouTube/Vimeo URL or direct MP4 link
   featured: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
