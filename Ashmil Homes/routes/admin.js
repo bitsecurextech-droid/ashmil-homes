@@ -4,10 +4,9 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Property = require('../models/Property');
 const auth = require('../middleware/auth');
-const upload = require('../middleware/upload');
 const router = express.Router();
 
-// ---- CREATE DEFAULT ADMIN (only first run) ----
+// ---- CREATE DEFAULT ADMIN ----
 const initAdmin = async () => {
   const count = await Admin.countDocuments();
   if (count === 0) {
@@ -29,24 +28,44 @@ router.post('/login', async (req, res) => {
   res.json({ token, message: 'Login successful' });
 });
 
-// ---- ADD PROPERTY (with images + video URL) ----
-router.post('/properties', auth, upload.array('images', 10), async (req, res) => {
+// ---- GET ALL PROPERTIES (admin) ----
+router.get('/properties', auth, async (req, res) => {
   try {
-    console.log('Received property data:', req.body);
-    console.log('Files:', req.files);
-    const { title, description, price, location, category, bedrooms, bathrooms, area, featured, video } = req.body;
+    const properties = await Property.find().sort({ createdAt: -1 });
+    res.json(properties);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---- ADD PROPERTY (no file upload, only URLs) ----
+router.post('/properties', auth, async (req, res) => {
+  try {
+    const { title, description, price, location, category, bedrooms, bathrooms, area, featured, images, video } = req.body;
     if (!title || !description || !price || !location || !category) {
       return res.status(400).json({ error: 'Missing required fields: title, description, price, location, category' });
     }
-    const images = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
+
+    // Process images: if images is a string, split by comma/newline; else use array
+    let imageArray = [];
+    if (typeof images === 'string') {
+      imageArray = images.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+    } else if (Array.isArray(images)) {
+      imageArray = images.filter(s => s);
+    }
+
     const property = new Property({
-      title, description, price, location, category,
+      title,
+      description,
+      price,
+      location,
+      category,
       bedrooms: Number(bedrooms) || 0,
       bathrooms: Number(bathrooms) || 0,
       area: area || '',
       featured: featured === 'true',
-      images,
-      video: video || '' // store video URL string
+      images: imageArray,
+      video: video || ''
     });
     await property.save();
     res.status(201).json(property);
@@ -56,22 +75,22 @@ router.post('/properties', auth, upload.array('images', 10), async (req, res) =>
   }
 });
 
-// ---- UPDATE PROPERTY (with images + video URL) ----
-router.put('/properties/:id', auth, upload.array('images', 10), async (req, res) => {
+// ---- UPDATE PROPERTY ----
+router.put('/properties/:id', auth, async (req, res) => {
   try {
     const updates = { ...req.body };
-    // If new images were uploaded, replace the images array
-    if (req.files && req.files.length) {
-      updates.images = req.files.map(f => '/uploads/' + f.filename);
+    // Process images if provided
+    if (updates.images) {
+      if (typeof updates.images === 'string') {
+        updates.images = updates.images.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+      } else if (!Array.isArray(updates.images)) {
+        updates.images = [];
+      }
     }
     // Convert numeric fields
     if (updates.bedrooms) updates.bedrooms = Number(updates.bedrooms);
     if (updates.bathrooms) updates.bathrooms = Number(updates.bathrooms);
     if (updates.featured) updates.featured = updates.featured === 'true';
-    // video is already a string from req.body; include it if provided
-    // If video is empty string, it will overwrite previous video
-    // We can explicitly set video: updates.video || ''
-    // But it's already in updates from req.body
 
     const property = await Property.findByIdAndUpdate(req.params.id, updates, { new: true });
     res.json(property);
@@ -85,16 +104,6 @@ router.delete('/properties/:id', auth, async (req, res) => {
   try {
     await Property.findByIdAndDelete(req.params.id);
     res.json({ message: 'Property deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ---- GET ALL PROPERTIES (for admin dashboard) ----
-router.get('/properties', auth, async (req, res) => {
-  try {
-    const properties = await Property.find().sort({ createdAt: -1 });
-    res.json(properties);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
