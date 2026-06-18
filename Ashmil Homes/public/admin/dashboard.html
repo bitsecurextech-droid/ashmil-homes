@@ -28,7 +28,7 @@
         <p class="text-xs text-gray-500">Property Management Dashboard</p>
       </div>
     </div>
-    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full shadow transition">🚪 Logout</button>
+    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full shadow transition"><i data-lucide="log-out" class="w-4 h-4 inline-block mr-2"></i>Logout</button>
   </div>
 
   <!-- Add / Edit Property Form -->
@@ -42,26 +42,26 @@
       <div><label class="block text-sm font-medium mb-1">Location *</label><input type="text" id="location" required class="w-full border border-gray-300 rounded-lg p-2"></div>
       <div><label class="block text-sm font-medium mb-1">Category *</label>
         <select id="category" required class="w-full border border-gray-300 rounded-lg p-2">
-          <option value="houses">🏡 Houses for Sale</option>
-          <option value="land">🌾 Land for Sale</option>
-          <option value="shortlets">🏨 Shortlets</option>
-          <option value="flats">🏢 Flats & Apartments</option>
+          <option value="houses">Houses for Sale</option>
+          <option value="land">Land for Sale</option>
+          <option value="shortlets">Shortlets</option>
+          <option value="flats">Flats & Apartments</option>
         </select>
       </div>
       <div class="md:col-span-2"><label class="block text-sm font-medium mb-1">Description *</label><textarea id="description" rows="3" required class="w-full border border-gray-300 rounded-lg p-2"></textarea></div>
       <div><label class="block text-sm font-medium mb-1">Bedrooms</label><input type="number" id="bedrooms" class="w-full border border-gray-300 rounded-lg p-2"></div>
       <div><label class="block text-sm font-medium mb-1">Bathrooms</label><input type="number" id="bathrooms" class="w-full border border-gray-300 rounded-lg p-2"></div>
       <div><label class="block text-sm font-medium mb-1">Area (sq ft)</label><input type="text" id="area" class="w-full border border-gray-300 rounded-lg p-2"></div>
-      <div class="flex items-center gap-3"><label class="flex items-center gap-2"><input type="checkbox" id="featured"> <span>⭐ Featured Property</span></label></div>
+      <div class="flex items-center gap-3"><label class="flex items-center gap-2"><input type="checkbox" id="featured"> <span>Featured Property</span></label></div>
       
-      <!-- Image URLs (textarea) -->
+      <!-- Image URLs (textarea) – NO FILE UPLOAD -->
       <div class="md:col-span-2">
         <label class="block text-sm font-medium mb-1">Image URLs (one per line)</label>
         <textarea id="imageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" class="w-full border border-gray-300 rounded-lg p-2" oninput="previewImages()"></textarea>
         <div id="imagePreview" class="image-preview"></div>
       </div>
       
-      <!-- Video URL -->
+      <!-- Video URL (text input) -->
       <div class="md:col-span-2">
         <label class="block text-sm font-medium mb-1">Video URL (YouTube, Vimeo, or direct MP4 link)</label>
         <input type="url" id="videoUrl" placeholder="https://www.youtube.com/embed/xxx or https://vimeo.com/xxx" class="w-full border border-gray-300 rounded-lg p-2" oninput="previewVideo(this.value)">
