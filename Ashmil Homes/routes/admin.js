@@ -29,12 +29,12 @@ router.post('/login', async (req, res) => {
   res.json({ token, message: 'Login successful' });
 });
 
-// ---- ADD PROPERTY (with images) ----
+// ---- ADD PROPERTY (with images + video URL) ----
 router.post('/properties', auth, upload.array('images', 10), async (req, res) => {
   try {
     console.log('Received property data:', req.body);
     console.log('Files:', req.files);
-    const { title, description, price, location, category, bedrooms, bathrooms, area, featured } = req.body;
+    const { title, description, price, location, category, bedrooms, bathrooms, area, featured, video } = req.body;
     if (!title || !description || !price || !location || !category) {
       return res.status(400).json({ error: 'Missing required fields: title, description, price, location, category' });
     }
@@ -45,7 +45,8 @@ router.post('/properties', auth, upload.array('images', 10), async (req, res) =>
       bathrooms: Number(bathrooms) || 0,
       area: area || '',
       featured: featured === 'true',
-      images
+      images,
+      video: video || '' // store video URL string
     });
     await property.save();
     res.status(201).json(property);
@@ -55,16 +56,23 @@ router.post('/properties', auth, upload.array('images', 10), async (req, res) =>
   }
 });
 
-// ---- UPDATE PROPERTY ----
+// ---- UPDATE PROPERTY (with images + video URL) ----
 router.put('/properties/:id', auth, upload.array('images', 10), async (req, res) => {
   try {
     const updates = { ...req.body };
+    // If new images were uploaded, replace the images array
     if (req.files && req.files.length) {
       updates.images = req.files.map(f => '/uploads/' + f.filename);
     }
+    // Convert numeric fields
     if (updates.bedrooms) updates.bedrooms = Number(updates.bedrooms);
     if (updates.bathrooms) updates.bathrooms = Number(updates.bathrooms);
     if (updates.featured) updates.featured = updates.featured === 'true';
+    // video is already a string from req.body; include it if provided
+    // If video is empty string, it will overwrite previous video
+    // We can explicitly set video: updates.video || ''
+    // But it's already in updates from req.body
+
     const property = await Property.findByIdAndUpdate(req.params.id, updates, { new: true });
     res.json(property);
   } catch (err) {
