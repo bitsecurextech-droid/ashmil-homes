@@ -33,7 +33,7 @@
   <!-- Add / Edit Property Form -->
   <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 card">
     <h2 class="text-2xl font-semibold mb-5 border-b pb-2">Add / Edit Property</h2>
-    <form id="propertyForm" class="grid md:grid-cols-2 gap-5">
+    <form id="propertyForm" enctype="multipart/form-data" class="grid md:grid-cols-2 gap-5">
       <input type="hidden" id="propertyId">
       
       <div><label class="block text-sm font-medium mb-1">Title *</label><input type="text" id="title" required class="w-full border border-gray-300 rounded-lg p-2"></div>
@@ -53,17 +53,24 @@
       <div><label class="block text-sm font-medium mb-1">Area (sq ft)</label><input type="text" id="area" class="w-full border border-gray-300 rounded-lg p-2"></div>
       <div class="flex items-center gap-3"><label class="flex items-center gap-2"><input type="checkbox" id="featured"> <span>Featured Property</span></label></div>
       
-      <!-- IMAGE URLs (textarea) – NO FILE UPLOAD -->
+      <!-- Image UPLOAD (files) -->
       <div class="md:col-span-2">
-        <label class="block text-sm font-medium mb-1">Image URLs (one per line)</label>
-        <textarea id="imageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" class="w-full border border-gray-300 rounded-lg p-2"></textarea>
-        <div id="imagePreview" class="image-preview"></div>
+        <label class="block text-sm font-medium mb-1">Upload Images (JPEG/PNG)</label>
+        <input type="file" id="images" multiple accept="image/*" class="w-full border border-gray-300 rounded-lg p-2" onchange="previewUploadedImages(this)">
+        <div id="uploadPreview" class="image-preview"></div>
+      </div>
+
+      <!-- Image URLs (textarea) -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium mb-1">OR Paste Image URLs (one per line)</label>
+        <textarea id="imageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" class="w-full border border-gray-300 rounded-lg p-2" oninput="previewUrlImages()"></textarea>
+        <div id="urlPreview" class="image-preview"></div>
       </div>
       
-      <!-- VIDEO URL (text input) -->
+      <!-- Video URL -->
       <div class="md:col-span-2">
         <label class="block text-sm font-medium mb-1">Video URL (YouTube, Vimeo, or direct MP4 link)</label>
-        <input type="url" id="videoUrl" placeholder="https://www.youtube.com/embed/xxx or https://vimeo.com/xxx" class="w-full border border-gray-300 rounded-lg p-2">
+        <input type="url" id="videoUrl" placeholder="https://www.youtube.com/embed/xxx or https://vimeo.com/xxx" class="w-full border border-gray-300 rounded-lg p-2" oninput="previewVideo(this.value)">
         <div id="videoPreview" class="mt-2"></div>
       </div>
       
@@ -85,10 +92,28 @@
   const token = localStorage.getItem('adminToken');
   if (!token) window.location.href = '/admin/login.html';
 
-  // ====== IMAGE PREVIEW (from URLs) ======
-  function previewImages() {
+  // ====== UPLOADED IMAGES PREVIEW ======
+  function previewUploadedImages(input) {
+    const preview = document.getElementById('uploadPreview');
+    preview.innerHTML = '';
+    if (input.files) {
+      Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = 'w-20 h-20 object-cover rounded border';
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }
+
+  // ====== URL IMAGES PREVIEW ======
+  function previewUrlImages() {
     const textarea = document.getElementById('imageUrls');
-    const preview = document.getElementById('imagePreview');
+    const preview = document.getElementById('urlPreview');
     const urls = textarea.value.split('\n').map(s => s.trim()).filter(s => s);
     preview.innerHTML = '';
     urls.forEach(url => {
@@ -118,12 +143,6 @@
     }
     container.innerHTML = html;
   }
-
-  // Attach preview events
-  document.getElementById('imageUrls').addEventListener('input', previewImages);
-  document.getElementById('videoUrl').addEventListener('input', function() {
-    previewVideo(this.value);
-  });
 
   // ====== API CALLS ======
   async function apiCall(url, options = {}) {
@@ -172,39 +191,43 @@
   document.getElementById('propertyForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('propertyId').value;
+    const formData = new FormData();
+    formData.append('title', document.getElementById('title').value);
+    formData.append('description', document.getElementById('description').value);
+    formData.append('price', document.getElementById('price').value);
+    formData.append('location', document.getElementById('location').value);
+    formData.append('category', document.getElementById('category').value);
+    formData.append('bedrooms', document.getElementById('bedrooms').value || 0);
+    formData.append('bathrooms', document.getElementById('bathrooms').value || 0);
+    formData.append('area', document.getElementById('area').value || '');
+    formData.append('featured', document.getElementById('featured').checked);
+    formData.append('video', document.getElementById('videoUrl').value || '');
+
+    // Image URLs from textarea
     const imageUrls = document.getElementById('imageUrls').value.split('\n').map(s => s.trim()).filter(s => s);
-    const data = {
-      title: document.getElementById('title').value,
-      description: document.getElementById('description').value,
-      price: document.getElementById('price').value,
-      location: document.getElementById('location').value,
-      category: document.getElementById('category').value,
-      bedrooms: document.getElementById('bedrooms').value || 0,
-      bathrooms: document.getElementById('bathrooms').value || 0,
-      area: document.getElementById('area').value || '',
-      featured: document.getElementById('featured').checked,
-      images: imageUrls,
-      video: document.getElementById('videoUrl').value || ''
-    };
+    formData.append('imageUrls', JSON.stringify(imageUrls));
+
+    // Uploaded images
+    const images = document.getElementById('images').files;
+    for (let i = 0; i < images.length; i++) {
+      formData.append('images', images[i]);
+    }
 
     const url = id ? `/api/admin/properties/${id}` : '/api/admin/properties';
     const method = id ? 'PUT' : 'POST';
     try {
       const res = await fetch(url, {
         method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
       });
       if (res.ok) {
         alert('Property saved successfully!');
         resetForm();
         loadProperties();
       } else {
-        const err = await res.json();
-        alert('Error: ' + (err.error || 'Unknown error'));
+        const err = await res.text();
+        alert('Error: ' + err);
       }
     } catch (err) {
       alert('Network error: ' + err.message);
@@ -227,10 +250,12 @@
       document.getElementById('featured').checked = p.featured;
       // Set image URLs
       document.getElementById('imageUrls').value = (p.images || []).join('\n');
-      previewImages();
+      previewUrlImages();
       // Set video URL
       document.getElementById('videoUrl').value = p.video || '';
       if (p.video) previewVideo(p.video);
+      // Clear upload preview
+      document.getElementById('uploadPreview').innerHTML = '';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       alert('Error loading property for edit');
@@ -255,7 +280,8 @@
   function resetForm() {
     document.getElementById('propertyForm').reset();
     document.getElementById('propertyId').value = '';
-    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('uploadPreview').innerHTML = '';
+    document.getElementById('urlPreview').innerHTML = '';
     document.getElementById('videoPreview').innerHTML = '';
     document.getElementById('videoUrl').value = '';
     document.getElementById('imageUrls').value = '';
