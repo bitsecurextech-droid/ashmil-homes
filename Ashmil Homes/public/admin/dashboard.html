@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard – Ashmil Homes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Manrope', sans-serif; background: #f1f5f9; }
+    .card { transition: transform 0.2s, box-shadow 0.2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); }
+    .image-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+    <div class="flex items-center gap-3 bg-white rounded-full shadow-md px-5 py-2">
+      <img src="https://hotgistloaded.com.ng/wp-content/uploads/2026/05/logo-ashmil-DAwsa8ai.jpg" alt="Ashmil Homes" class="w-12 h-12 rounded-full ring-2 ring-gold/60">
+      <div>
+        <h1 class="font-serif text-2xl font-bold text-navy">Ashmil Homes</h1>
+        <p class="text-xs text-gray-500">Property Management Dashboard</p>
+      </div>
+    </div>
+    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full shadow transition">Logout</button>
+  </div>
+
+  <!-- Add / Edit Property Form -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 card">
+    <h2 class="text-2xl font-semibold mb-5 border-b pb-2">Add / Edit Property</h2>
+    <form id="propertyForm" class="grid md:grid-cols-2 gap-5">
+      <input type="hidden" id="propertyId">
+      
+      <div><label class="block text-sm font-medium mb-1">Title *</label><input type="text" id="title" required class="w-full border border-gray-300 rounded-lg p-2"></div>
+      <div><label class="block text-sm font-medium mb-1">Price *</label><input type="text" id="price" required class="w-full border border-gray-300 rounded-lg p-2"></div>
+      <div><label class="block text-sm font-medium mb-1">Location *</label><input type="text" id="location" required class="w-full border border-gray-300 rounded-lg p-2"></div>
+      <div><label class="block text-sm font-medium mb-1">Category *</label>
+        <select id="category" required class="w-full border border-gray-300 rounded-lg p-2">
+          <option value="houses">Houses for Sale</option>
+          <option value="land">Land for Sale</option>
+          <option value="shortlets">Shortlets</option>
+          <option value="flats">Flats & Apartments</option>
+        </select>
+      </div>
+      <div class="md:col-span-2"><label class="block text-sm font-medium mb-1">Description *</label><textarea id="description" rows="3" required class="w-full border border-gray-300 rounded-lg p-2"></textarea></div>
+      <div><label class="block text-sm font-medium mb-1">Bedrooms</label><input type="number" id="bedrooms" class="w-full border border-gray-300 rounded-lg p-2"></div>
+      <div><label class="block text-sm font-medium mb-1">Bathrooms</label><input type="number" id="bathrooms" class="w-full border border-gray-300 rounded-lg p-2"></div>
+      <div><label class="block text-sm font-medium mb-1">Area (sq ft)</label><input type="text" id="area" class="w-full border border-gray-300 rounded-lg p-2"></div>
+      <div class="flex items-center gap-3"><label class="flex items-center gap-2"><input type="checkbox" id="featured"> <span>Featured Property</span></label></div>
+      
+      <!-- IMAGE URLs (textarea) – NO FILE UPLOAD -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium mb-1">Image URLs (one per line)</label>
+        <textarea id="imageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" class="w-full border border-gray-300 rounded-lg p-2"></textarea>
+        <div id="imagePreview" class="image-preview"></div>
+      </div>
+      
+      <!-- VIDEO URL (text input) -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium mb-1">Video URL (YouTube, Vimeo, or direct MP4 link)</label>
+        <input type="url" id="videoUrl" placeholder="https://www.youtube.com/embed/xxx or https://vimeo.com/xxx" class="w-full border border-gray-300 rounded-lg p-2">
+        <div id="videoPreview" class="mt-2"></div>
+      </div>
+      
+      <div class="md:col-span-2 flex gap-4">
+        <button type="submit" class="gradient-gold text-navy px-6 py-2 rounded-lg font-semibold shadow hover:shadow-md transition">Save Property</button>
+        <button type="button" onclick="resetForm()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Properties List -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 card">
+    <h2 class="text-2xl font-semibold mb-5 border-b pb-2">All Properties</h2>
+    <div id="propertyList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('adminToken');
+  if (!token) window.location.href = '/admin/login.html';
+
+  // ====== IMAGE PREVIEW (from URLs) ======
+  function previewImages() {
+    const textarea = document.getElementById('imageUrls');
+    const preview = document.getElementById('imagePreview');
+    const urls = textarea.value.split('\n').map(s => s.trim()).filter(s => s);
+    preview.innerHTML = '';
+    urls.forEach(url => {
+      const img = document.createElement('img');
+      img.src = url;
+      img.onerror = () => { img.src = 'https://via.placeholder.com/80?text=Invalid'; };
+      preview.appendChild(img);
+    });
+  }
+
+  // ====== VIDEO PREVIEW ======
+  function previewVideo(url) {
+    const container = document.getElementById('videoPreview');
+    container.innerHTML = '';
+    if (!url) return;
+    let html = '';
+    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) {
+      html = `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen class="rounded-lg"></iframe>`;
+    } else if (url.match(/vimeo\.com\/(\d+)/)) {
+      const id = url.match(/vimeo\.com\/(\d+)/)[1];
+      html = `<iframe width="100%" height="200" src="https://player.vimeo.com/video/${id}" frameborder="0" allowfullscreen class="rounded-lg"></iframe>`;
+    } else if (url.match(/\.(mp4|webm|mov)$/i)) {
+      html = `<video controls class="w-full max-h-48 rounded-lg"><source src="${url}" type="video/mp4"></video>`;
+    } else {
+      html = `<iframe width="100%" height="200" src="${url}" frameborder="0" allowfullscreen class="rounded-lg"></iframe>`;
+    }
+    container.innerHTML = html;
+  }
+
+  // Attach preview events
+  document.getElementById('imageUrls').addEventListener('input', previewImages);
+  document.getElementById('videoUrl').addEventListener('input', function() {
+    previewVideo(this.value);
+  });
+
+  // ====== API CALLS ======
+  async function apiCall(url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      headers: { 'Authorization': `Bearer ${token}`, ...options.headers }
+    });
+    if (res.status === 401) {
+      localStorage.removeItem('adminToken');
+      window.location.href = '/admin/login.html';
+    }
+    return res.json();
+  }
+
+  async function loadProperties() {
+    try {
+      const props = await apiCall('/api/admin/properties');
+      const container = document.getElementById('propertyList');
+      if (!props.length) {
+        container.innerHTML = '<p class="col-span-full text-center text-gray-500">No properties yet. Add your first one above!</p>';
+        return;
+      }
+      container.innerHTML = props.map(p => `
+        <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition bg-white">
+          <img src="${p.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-44 object-cover" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+          <div class="p-3">
+            <h3 class="font-bold text-lg">${escapeHtml(p.title)}</h3>
+            <p class="text-gold font-semibold">₦${p.price}</p>
+            <p class="text-gray-500 text-sm">${escapeHtml(p.location)}</p>
+            ${p.video ? '<span class="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">🎬 Video</span>' : ''}
+            <div class="flex justify-between mt-3">
+              <button onclick="editProperty('${p._id}')" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm hover:bg-blue-200">✏️ Edit</button>
+              <button onclick="deleteProperty('${p._id}')" class="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm hover:bg-red-200">🗑️ Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+
+  // ====== FORM SUBMIT ======
+  document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('propertyId').value;
+    const imageUrls = document.getElementById('imageUrls').value.split('\n').map(s => s.trim()).filter(s => s);
+    const data = {
+      title: document.getElementById('title').value,
+      description: document.getElementById('description').value,
+      price: document.getElementById('price').value,
+      location: document.getElementById('location').value,
+      category: document.getElementById('category').value,
+      bedrooms: document.getElementById('bedrooms').value || 0,
+      bathrooms: document.getElementById('bathrooms').value || 0,
+      area: document.getElementById('area').value || '',
+      featured: document.getElementById('featured').checked,
+      images: imageUrls,
+      video: document.getElementById('videoUrl').value || ''
+    };
+
+    const url = id ? `/api/admin/properties/${id}` : '/api/admin/properties';
+    const method = id ? 'PUT' : 'POST';
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        alert('Property saved successfully!');
+        resetForm();
+        loadProperties();
+      } else {
+        const err = await res.json();
+        alert('Error: ' + (err.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Network error: ' + err.message);
+    }
+  });
+
+  // ====== EDIT PROPERTY ======
+  async function editProperty(id) {
+    try {
+      const p = await apiCall(`/api/properties/${id}`);
+      document.getElementById('propertyId').value = p._id;
+      document.getElementById('title').value = p.title;
+      document.getElementById('description').value = p.description;
+      document.getElementById('price').value = p.price;
+      document.getElementById('location').value = p.location;
+      document.getElementById('category').value = p.category;
+      document.getElementById('bedrooms').value = p.bedrooms;
+      document.getElementById('bathrooms').value = p.bathrooms;
+      document.getElementById('area').value = p.area;
+      document.getElementById('featured').checked = p.featured;
+      // Set image URLs
+      document.getElementById('imageUrls').value = (p.images || []).join('\n');
+      previewImages();
+      // Set video URL
+      document.getElementById('videoUrl').value = p.video || '';
+      if (p.video) previewVideo(p.video);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      alert('Error loading property for edit');
+    }
+  }
+
+  // ====== DELETE PROPERTY ======
+  async function deleteProperty(id) {
+    if (confirm('Delete this property permanently?')) {
+      try {
+        await fetch(`/api/admin/properties/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        loadProperties();
+      } catch (err) {
+        alert('Error deleting property');
+      }
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('propertyForm').reset();
+    document.getElementById('propertyId').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('videoPreview').innerHTML = '';
+    document.getElementById('videoUrl').value = '';
+    document.getElementById('imageUrls').value = '';
+  }
+
+  function logout() {
+    localStorage.removeItem('adminToken');
+    window.location.href = '/admin/login.html';
+  }
+
+  loadProperties();
+</script>
+</body>
+</html>
