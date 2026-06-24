@@ -53,21 +53,21 @@
       <div><label class="block text-sm font-medium mb-1">Area (sq ft)</label><input type="text" id="area" class="w-full border border-gray-300 rounded-lg p-2"></div>
       <div class="flex items-center gap-3"><label class="flex items-center gap-2"><input type="checkbox" id="featured"> <span>Featured Property</span></label></div>
       
-      <!-- Image UPLOAD (files) -->
+      <!-- IMAGE UPLOAD (files) -->
       <div class="md:col-span-2">
-        <label class="block text-sm font-medium mb-1">Upload Images (JPEG/PNG)</label>
+        <label class="block text-sm font-medium mb-1">Upload Images (JPEG/PNG) – optional</label>
         <input type="file" id="images" multiple accept="image/*" class="w-full border border-gray-300 rounded-lg p-2" onchange="previewUploadedImages(this)">
         <div id="uploadPreview" class="image-preview"></div>
       </div>
 
-      <!-- Image URLs (textarea) -->
+      <!-- IMAGE URLS (textarea) -->
       <div class="md:col-span-2">
         <label class="block text-sm font-medium mb-1">OR Paste Image URLs (one per line)</label>
         <textarea id="imageUrls" rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" class="w-full border border-gray-300 rounded-lg p-2" oninput="previewUrlImages()"></textarea>
         <div id="urlPreview" class="image-preview"></div>
       </div>
       
-      <!-- Video URL -->
+      <!-- VIDEO URL (text input) -->
       <div class="md:col-span-2">
         <label class="block text-sm font-medium mb-1">Video URL (YouTube, Vimeo, or direct MP4 link)</label>
         <input type="url" id="videoUrl" placeholder="https://www.youtube.com/embed/xxx or https://vimeo.com/xxx" class="w-full border border-gray-300 rounded-lg p-2" oninput="previewVideo(this.value)">
@@ -203,7 +203,7 @@
     formData.append('featured', document.getElementById('featured').checked);
     formData.append('video', document.getElementById('videoUrl').value || '');
 
-    // Image URLs from textarea
+    // Image URLs from textarea (send as JSON string)
     const imageUrls = document.getElementById('imageUrls').value.split('\n').map(s => s.trim()).filter(s => s);
     formData.append('imageUrls', JSON.stringify(imageUrls));
 
@@ -248,12 +248,15 @@
       document.getElementById('bathrooms').value = p.bathrooms;
       document.getElementById('area').value = p.area;
       document.getElementById('featured').checked = p.featured;
+      
       // Set image URLs
       document.getElementById('imageUrls').value = (p.images || []).join('\n');
       previewUrlImages();
+      
       // Set video URL
       document.getElementById('videoUrl').value = p.video || '';
       if (p.video) previewVideo(p.video);
+      
       // Clear upload preview
       document.getElementById('uploadPreview').innerHTML = '';
       window.scrollTo({ top: 0, behavior: 'smooth' });
