@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Property = require('../models/Property');
 const auth = require('../middleware/auth');
+const upload = require('../middleware/upload'); // keep this for file uploads
 const router = express.Router();
 
 // ---- CREATE DEFAULT ADMIN ----
@@ -38,21 +39,29 @@ router.get('/properties', auth, async (req, res) => {
   }
 });
 
-// ---- ADD PROPERTY (no file upload, only URLs) ----
-router.post('/properties', auth, async (req, res) => {
+// ---- ADD PROPERTY (file upload + URL links) ----
+router.post('/properties', auth, upload.array('images', 10), async (req, res) => {
   try {
-    const { title, description, price, location, category, bedrooms, bathrooms, area, featured, images, video } = req.body;
+    const { title, description, price, location, category, bedrooms, bathrooms, area, featured, video, imageUrls } = req.body;
     if (!title || !description || !price || !location || !category) {
-      return res.status(400).json({ error: 'Missing required fields: title, description, price, location, category' });
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Process images: if images is a string, split by comma/newline; else use array
-    let imageArray = [];
-    if (typeof images === 'string') {
-      imageArray = images.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
-    } else if (Array.isArray(images)) {
-      imageArray = images.filter(s => s);
+    // Get uploaded image paths
+    const uploadedImages = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
+
+    // Get URL images from textarea (sent as JSON string)
+    let urlImages = [];
+    if (imageUrls) {
+      try {
+        urlImages = JSON.parse(imageUrls);
+      } catch (e) {
+        urlImages = [];
+      }
     }
+
+    // Combine both: uploaded files + URL images
+    const allImages = [...uploadedImages, ...urlImages];
 
     const property = new Property({
       title,
@@ -64,7 +73,7 @@ router.post('/properties', auth, async (req, res) => {
       bathrooms: Number(bathrooms) || 0,
       area: area || '',
       featured: featured === 'true',
-      images: imageArray,
+      images: allImages,
       video: video || ''
     });
     await property.save();
@@ -76,21 +85,39 @@ router.post('/properties', auth, async (req, res) => {
 });
 
 // ---- UPDATE PROPERTY ----
-router.put('/properties/:id', auth, async (req, res) => {
+router.put('/properties/:id', auth, upload.array('images', 10), async (req, res) => {
   try {
-    const updates = { ...req.body };
-    // Process images if provided
-    if (updates.images) {
-      if (typeof updates.images === 'string') {
-        updates.images = updates.images.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
-      } else if (!Array.isArray(updates.images)) {
-        updates.images = [];
+    const { title, description, price, location, category, bedrooms, bathrooms, area, featured, video, imageUrls } = req.body;
+    
+    // Get uploaded image paths
+    const uploadedImages = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
+
+    // Get URL images from textarea
+    let urlImages = [];
+    if (imageUrls) {
+      try {
+        urlImages = JSON.parse(imageUrls);
+      } catch (e) {
+        urlImages = [];
       }
     }
-    // Convert numeric fields
-    if (updates.bedrooms) updates.bedrooms = Number(updates.bedrooms);
-    if (updates.bathrooms) updates.bathrooms = Number(updates.bathrooms);
-    if (updates.featured) updates.featured = updates.featured === 'true';
+
+    // Combine: uploaded files + URL images
+    const allImages = [...uploadedImages, ...urlImages];
+
+    const updates = {
+      title,
+      description,
+      price,
+      location,
+      category,
+      bedrooms: Number(bedrooms) || 0,
+      bathrooms: Number(bathrooms) || 0,
+      area: area || '',
+      featured: featured === 'true',
+      images: allImages,
+      video: video || ''
+    };
 
     const property = await Property.findByIdAndUpdate(req.params.id, updates, { new: true });
     res.json(property);
