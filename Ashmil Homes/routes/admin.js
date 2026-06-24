@@ -4,16 +4,20 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Property = require('../models/Property');
 const auth = require('../middleware/auth');
-const upload = require('../middleware/upload'); // keep this for file uploads
+const upload = require('../middleware/upload');
 const router = express.Router();
 
 // ---- CREATE DEFAULT ADMIN ----
 const initAdmin = async () => {
-  const count = await Admin.countDocuments();
-  if (count === 0) {
-    const hash = await bcrypt.hash('Admin123!', 10);
-    await Admin.create({ email: 'admin@ashmil.com', password: hash });
-    console.log('✅ Default admin created: admin@ashmil.com / Admin123!');
+  try {
+    const count = await Admin.countDocuments();
+    if (count === 0) {
+      const hash = await bcrypt.hash('Admin123!', 10);
+      await Admin.create({ email: 'admin@ashmil.com', password: hash });
+      console.log('✅ Default admin created: admin@ashmil.com / Admin123!');
+    }
+  } catch (err) {
+    console.error('Admin init error:', err.message);
   }
 };
 initAdmin();
@@ -39,18 +43,19 @@ router.get('/properties', auth, async (req, res) => {
   }
 });
 
-// ---- ADD PROPERTY (file upload + URL links) ----
+// ---- ADD PROPERTY (with image upload + URL images + video URL) ----
 router.post('/properties', auth, upload.array('images', 10), async (req, res) => {
   try {
     const { title, description, price, location, category, bedrooms, bathrooms, area, featured, video, imageUrls } = req.body;
+    
     if (!title || !description || !price || !location || !category) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Get uploaded image paths
+    // Uploaded images from file input
     const uploadedImages = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
 
-    // Get URL images from textarea (sent as JSON string)
+    // URL images from textarea (sent as JSON string)
     let urlImages = [];
     if (imageUrls) {
       try {
@@ -60,7 +65,7 @@ router.post('/properties', auth, upload.array('images', 10), async (req, res) =>
       }
     }
 
-    // Combine both: uploaded files + URL images
+    // Combine both
     const allImages = [...uploadedImages, ...urlImages];
 
     const property = new Property({
@@ -89,10 +94,10 @@ router.put('/properties/:id', auth, upload.array('images', 10), async (req, res)
   try {
     const { title, description, price, location, category, bedrooms, bathrooms, area, featured, video, imageUrls } = req.body;
     
-    // Get uploaded image paths
+    // Uploaded images from file input
     const uploadedImages = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
 
-    // Get URL images from textarea
+    // URL images from textarea
     let urlImages = [];
     if (imageUrls) {
       try {
@@ -102,7 +107,7 @@ router.put('/properties/:id', auth, upload.array('images', 10), async (req, res)
       }
     }
 
-    // Combine: uploaded files + URL images
+    // Combine both
     const allImages = [...uploadedImages, ...urlImages];
 
     const updates = {
