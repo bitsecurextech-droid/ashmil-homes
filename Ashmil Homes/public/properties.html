@@ -107,7 +107,7 @@
     container.innerHTML = props.map(p => `
       <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition overflow-hidden">
         <div class="relative h-56"><img src="${p.images?.[0] || '/assets/placeholder.jpg'}" class="w-full h-full object-cover"><span class="absolute top-2 right-2 bg-gold text-navy text-xs px-2 py-1 rounded-full">${p.category}</span></div>
-        <div class="p-4"><h3 class="font-serif text-xl font-bold">${p.title}</h3><p class="text-gold font-bold">₦${p.price}</p><p class="text-gray-500 text-sm">${p.location}</p><p class="text-gray-600 text-sm mt-2 line-clamp-2">${p.description}</p><a href="/property/${p._id}" class="inline-block mt-3 text-gold text-sm font-semibold">View details →</a></div>
+        <div class="p-4"><h3 class="font-serif text-xl font-bold">${p.title}</h3><p class="text-gold font-bold">₦${p.price}</p><p class="text-gray-500 text-sm">${p.location}</p><p class="text-gray-600 text-sm mt-2 line-clamp-2">${p.description}</p><a href="/property-details.html?id=${p._id}" class="inline-block mt-3 text-gold text-sm font-semibold">View details →</a></div>
       </div>
     `).join('');
   }
