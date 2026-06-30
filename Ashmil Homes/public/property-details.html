@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Manrope', sans-serif; background: white; }
+    body { font-family: 'Manrope', sans-serif; background: #f8f9fa; }
     h1, h2, h3, .font-serif { font-family: 'Fraunces', serif; }
     .bg-navy { background: #0A1A2F; }
     .bg-navy-deep { background: #051020; }
@@ -31,16 +31,6 @@
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
-    }
-    .debug-info {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 16px;
-      margin: 20px 0;
-      font-size: 14px;
-      font-family: monospace;
-      display: none;
     }
   </style>
 </head>
@@ -72,26 +62,33 @@
 
 <main class="container mx-auto px-4 py-12">
   <div id="property-details" class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <!-- Loading State -->
     <div id="loadingIndicator" class="p-12 text-center">
       <div class="loading-spinner"></div>
       <p class="text-gray-500 mt-4">Loading property details...</p>
     </div>
     
+    <!-- Property Content -->
     <div id="propertyContent" class="p-6 md:p-8" style="display:none;">
       <div class="grid md:grid-cols-2 gap-8">
+        <!-- Left Column - Images -->
         <div>
           <img id="mainImage" src="" class="w-full h-96 object-cover rounded-xl shadow-md" alt="Property">
-          <div id="imageGallery" class="mt-4 flex gap-2"></div>
+          <div id="imageGallery" class="mt-4 flex gap-2 flex-wrap"></div>
         </div>
+        
+        <!-- Right Column - Details -->
         <div>
           <h1 id="title" class="font-serif text-3xl md:text-4xl font-bold mb-2">Loading...</h1>
-          <p id="location" class="text-gray-500 mb-2">
+          <p class="text-gray-500 mb-2">
             <span class="font-semibold">📍</span> <span id="locationText">Loading...</span>
           </p>
           <p id="price" class="text-2xl text-gold font-bold mb-4">₦0</p>
-          <div id="specs" class="flex gap-4 mb-4 text-gray-700"></div>
-          <p id="description" class="text-gray-600 leading-relaxed mb-6">Loading...</p>
+          <div id="specs" class="flex flex-wrap gap-4 mb-4 text-gray-700"></div>
           <div id="categoryBadge" class="mb-4"></div>
+          <p id="description" class="text-gray-600 leading-relaxed mb-6">Loading...</p>
+          
+          <!-- Contact Section -->
           <div class="border-t pt-6 mt-4">
             <h3 class="font-serif text-xl font-semibold mb-4">Interested?</h3>
             <p class="text-gray-600 mb-4">Speak directly with our team to schedule an inspection or request more details.</p>
@@ -100,6 +97,8 @@
               <a href="tel:09023967106" class="border border-navy text-navy px-5 py-2 rounded-md font-semibold hover:bg-navy hover:text-white">📞 Alt. line (0902 396 7106)</a>
               <a href="mailto:Ashmilhomesnigerialimited@gmail.com" class="border border-gold text-gold px-5 py-2 rounded-md font-semibold">✉️ Email Us</a>
             </div>
+            
+            <!-- Visit Form -->
             <div class="mt-6 bg-gray-50 p-4 rounded-xl">
               <p class="font-semibold mb-2">🏠 Schedule a Visit</p>
               <p class="text-sm text-gray-600">Fill the form below and we'll contact you to arrange a viewing.</p>
@@ -121,14 +120,12 @@
       </div>
     </div>
     
+    <!-- Error Message -->
     <div id="errorMessage" class="p-12 text-center" style="display:none;">
       <p class="text-red-500 text-xl">❌ Property not found</p>
       <p class="text-gray-500 mt-2" id="errorDetail">The property you're looking for doesn't exist or has been removed.</p>
       <a href="/properties" class="inline-block mt-4 text-gold font-semibold">← Browse all properties</a>
     </div>
-
-    <!-- Debug Information (hidden by default) -->
-    <div id="debugInfo" class="debug-info"></div>
   </div>
 </main>
 
@@ -202,145 +199,135 @@
   const urlParams = new URLSearchParams(window.location.search);
   const propertyId = urlParams.get('id');
 
+  console.log('🔍 Property ID from URL:', propertyId);
+
   // Elements
   const loadingIndicator = document.getElementById('loadingIndicator');
   const propertyContent = document.getElementById('propertyContent');
   const errorMessage = document.getElementById('errorMessage');
-  const debugInfo = document.getElementById('debugInfo');
 
-  // Function to show debug info
-  function showDebug(message, data) {
-    debugInfo.style.display = 'block';
-    debugInfo.innerHTML = `
-      <strong>🔍 Debug Info:</strong><br>
-      <strong>Message:</strong> ${message}<br>
-      <strong>URL:</strong> ${window.location.href}<br>
-      <strong>Property ID:</strong> ${propertyId || 'Not found'}<br>
-      ${data ? `<strong>Data:</strong> <pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
-    `;
-    console.log('Debug:', message, data);
-  }
-
-  showDebug('Page loaded with ID: ' + propertyId);
-
+  // Check if we have an ID
   if (!propertyId) {
-    // No ID provided
+    // No ID - show error
     loadingIndicator.style.display = 'none';
     propertyContent.style.display = 'none';
     errorMessage.style.display = 'block';
-    document.getElementById('errorDetail').textContent = 'No property ID provided in the URL.';
-    showDebug('No property ID found in URL');
+    document.getElementById('errorDetail').textContent = 'No property ID provided. Please go back to the properties page.';
   } else {
-    // Fetch property details
+    // Fetch the property
     const apiUrl = `/api/properties/${propertyId}`;
-    showDebug('Fetching from: ' + apiUrl);
+    console.log('🔄 Fetching from:', apiUrl);
     
     fetch(apiUrl)
-      .then(res => {
-        showDebug('Response status: ' + res.status);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      .then(response => {
+        console.log('📡 Response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        return res.json();
+        return response.json();
       })
-      .then(prop => {
-        showDebug('Property data received', prop);
+      .then(property => {
+        console.log('✅ Property data received:', property);
         
         // Hide loading, show content
         loadingIndicator.style.display = 'none';
         propertyContent.style.display = 'block';
         errorMessage.style.display = 'none';
         
-        // Populate data with fallbacks
-        document.getElementById('title').innerText = prop.title || 'Untitled Property';
-        document.getElementById('locationText').innerText = prop.location || 'Location not specified';
-        document.getElementById('price').innerText = prop.price ? `₦${prop.price}` : '₦0';
-        document.getElementById('description').innerText = prop.description || 'No description available.';
+        // Update the page with property data
+        document.getElementById('title').textContent = property.title || 'Untitled Property';
+        document.getElementById('locationText').textContent = property.location || 'Location not specified';
+        document.getElementById('price').textContent = `₦${property.price || '0'}`;
+        document.getElementById('description').textContent = property.description || 'No description available.';
         
-        // Set main image
+        // Main image
         const mainImage = document.getElementById('mainImage');
-        if (prop.images && prop.images.length > 0) {
-          mainImage.src = prop.images[0];
+        if (property.images && property.images.length > 0) {
+          mainImage.src = property.images[0];
         } else {
-          mainImage.src = '/assets/placeholder.jpg';
+          mainImage.src = 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800';
         }
-        mainImage.alt = prop.title || 'Property';
+        mainImage.alt = property.title || 'Property';
         
-        // Build specifications
-        let specs = '';
-        if (prop.bedrooms) specs += `<span>🛏️ ${prop.bedrooms} beds</span>`;
-        if (prop.bathrooms) specs += `<span>🚿 ${prop.bathrooms} baths</span>`;
-        if (prop.area) specs += `<span>📏 ${prop.area}</span>`;
-        document.getElementById('specs').innerHTML = specs || '<span>No specifications listed</span>';
+        // Specifications
+        const specsDiv = document.getElementById('specs');
+        let specsHTML = '';
+        if (property.bedrooms) specsHTML += `<span>🛏️ ${property.bedrooms} beds</span>`;
+        if (property.bathrooms) specsHTML += `<span>🚿 ${property.bathrooms} baths</span>`;
+        if (property.area) specsHTML += `<span>📏 ${property.area}</span>`;
+        specsDiv.innerHTML = specsHTML || '<span class="text-gray-400">No specifications listed</span>';
         
         // Category badge
-        const categoryBadge = document.getElementById('categoryBadge');
-        if (prop.category) {
-          categoryBadge.innerHTML = `<span style="background: #D4AF37; color: #0A1A2F; padding: 4px 12px; border-radius: 20px; font-size: 0.875rem; font-weight: 600; text-transform: uppercase;">${prop.category}</span>`;
+        const badgeDiv = document.getElementById('categoryBadge');
+        if (property.category) {
+          badgeDiv.innerHTML = `<span class="bg-gold text-navy px-3 py-1 rounded-full text-sm font-semibold uppercase">${property.category}</span>`;
         }
         
-        // Image gallery (if multiple images)
-        const gallery = document.getElementById('imageGallery');
-        if (prop.images && prop.images.length > 1) {
-          gallery.innerHTML = prop.images.slice(1).map(img => `
-            <img src="${img}" class="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-75" onclick="document.getElementById('mainImage').src='${img}'" alt="Property image">
+        // Gallery (thumbnails)
+        const galleryDiv = document.getElementById('imageGallery');
+        if (property.images && property.images.length > 1) {
+          galleryDiv.innerHTML = property.images.slice(1, 6).map(img => `
+            <img src="${img}" class="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-75 border-2 border-transparent hover:border-gold" 
+                 onclick="document.getElementById('mainImage').src='${img}'" alt="Property image">
           `).join('');
+        } else {
+          galleryDiv.innerHTML = '';
         }
       })
-      .catch(err => {
-        console.error('Error loading property:', err);
+      .catch(error => {
+        console.error('❌ Error loading property:', error);
         loadingIndicator.style.display = 'none';
         propertyContent.style.display = 'none';
         errorMessage.style.display = 'block';
-        document.getElementById('errorDetail').textContent = `Error: ${err.message}. Please check your connection and try again.`;
-        showDebug('Error: ' + err.message);
+        document.getElementById('errorDetail').textContent = `Error: ${error.message}. Please refresh the page or try again later.`;
       });
   }
 
-  // Visit form submission with email
-  document.getElementById('visitForm')?.addEventListener('submit', async (e) => {
+  // Visit form submission
+  document.getElementById('visitForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
+    
     const name = document.getElementById('visitorName').value;
     const email = document.getElementById('visitorEmail').value;
     const phone = document.getElementById('visitorPhone').value;
     const date = document.getElementById('visitDate').value;
+    const propertyTitle = document.getElementById('title').textContent;
     
-    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Sending...';
     submitBtn.disabled = true;
     
-    try {
-      // Send to your backend contact API
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name,
-          email: email,
-          phone: phone,
-          message: `Inspection request for property: ${document.getElementById('title').innerText}\nPreferred date: ${date || 'Not specified'}`
-        })
-      });
-      
-      const result = await response.json();
-      if (result.success) {
+    // Send to backend
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        phone: phone,
+        message: `Inspection request for: ${propertyTitle}\nPreferred date: ${date || 'Not specified'}`
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
         alert('✅ Thank you! We will contact you shortly to arrange a viewing.');
-        e.target.reset();
+        this.reset();
       } else {
-        alert('❌ Sorry, there was an error sending your request. Please call us directly.');
+        alert('❌ Sorry, there was an error. Please call us directly.');
       }
-    } catch (error) {
-      console.error('Form error:', error);
-      alert('❌ Network error. Please call us directly or try again.');
-    } finally {
-      submitBtn.textContent = 'Request Inspection';
+    })
+    .catch(() => {
+      alert('❌ Network error. Please call us directly on 0707 440 4637.');
+    })
+    .finally(() => {
+      submitBtn.textContent = originalText;
       submitBtn.disabled = false;
-    }
+    });
   });
 
-  // Add this to help debug - show the raw URL parameters
-  console.log('All URL params:', window.location.search);
-  console.log('Property ID from URL:', propertyId);
+  console.log('🚀 Property details page loaded successfully');
 </script>
 </body>
 </html>
