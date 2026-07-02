@@ -62,7 +62,7 @@
 </header>
 
 <main>
-  <!-- Hero Slider (same as before) -->
+  <!-- Hero Slider -->
   <section class="relative h-[88vh] min-h-[520px] md:h-screen overflow-hidden">
     <div class="absolute inset-0 hero-slide transition-opacity duration-1000 opacity-100"><img src="https://hotgistloaded.com.ng/wp-content/uploads/2026/05/pexels-shox-31656145-scaled.jpg" class="w-full h-full object-cover"><div class="absolute inset-0 hero-gradient"></div></div>
     <div class="absolute inset-0 hero-slide transition-opacity duration-1000 opacity-0"><img src="https://hotgistloaded.com.ng/wp-content/uploads/2026/05/pexels-lorenzo-manera-686693293-26957412-scaled.jpg" class="w-full h-full object-cover"><div class="absolute inset-0 hero-gradient"></div></div>
@@ -87,18 +87,18 @@
     </div>
   </section>
 
-  <!-- Stats, Why Choose Us, Featured Listings, CTA (same as before) -->
-  <!-- ... (keep your stats, why choose us, featured listings, CTA sections) ... -->
+  <!-- Stats -->
   <section class="bg-navy text-white py-12"><div class="container mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-center"><div><div class="font-serif text-4xl md:text-5xl font-bold text-gold">50+</div><div class="text-xs uppercase tracking-wider mt-2">Homes Delivered</div></div><div><div class="font-serif text-4xl md:text-5xl font-bold text-gold">10+</div><div class="text-xs uppercase tracking-wider mt-2">Years Experience</div></div><div><div class="font-serif text-4xl md:text-5xl font-bold text-gold">8</div><div class="text-xs uppercase tracking-wider mt-2">Lagos Locations</div></div><div><div class="font-serif text-4xl md:text-5xl font-bold text-gold">100%</div><div class="text-xs uppercase tracking-wider mt-2">Client Trust</div></div></div></section>
 
   <section class="py-20 bg-gray-50"><div class="container mx-auto px-4 text-center max-w-2xl mx-auto mb-12"><span class="text-gold text-xs uppercase tracking-wider">Why Choose Us</span><h2 class="font-serif text-3xl md:text-5xl font-bold mt-2">Tested. Trusted. Proven.</h2></div><div class="container mx-auto px-4 grid md:grid-cols-3 gap-6"><div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition"><div class="text-4xl mb-4">🏆</div><h3 class="font-serif text-xl font-semibold mb-2">Quality Construction</h3><p class="text-gray-600">Reputable engineers, premium materials, modern standards.</p></div><div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition"><div class="text-4xl mb-4">🛡️</div><h3 class="font-serif text-xl font-semibold mb-2">Verified Titles</h3><p class="text-gray-600">Genuine documents and transparent processes.</p></div><div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition"><div class="text-4xl mb-4">✨</div><h3 class="font-serif text-xl font-semibold mb-2">End-to-End Service</h3><p class="text-gray-600">Land acquisition, design, build, sale, and shortlets.</p></div></div></section>
 
+  <!-- Featured Listings -->
   <section class="py-20"><div class="container mx-auto px-4"><div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4"><div><span class="text-gold text-xs uppercase tracking-wider">Featured Listings</span><h2 class="font-serif text-3xl md:text-5xl font-bold mt-2">Discover Your Next Home</h2></div><a href="/properties" class="border border-navy text-navy px-4 py-2 rounded-md hover:bg-navy hover:text-white transition">View All Properties →</a></div><div id="featured-properties" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div></div></section>
 
   <section class="relative py-20 bg-navy-deep text-white text-center"><div class="container mx-auto px-4 max-w-3xl"><div class="text-5xl mb-4">🏢</div><h2 class="font-serif text-3xl md:text-5xl font-bold mb-4">Build Your Dream Home With Us</h2><p class="text-white/80 mb-8">Whether you're buying land, acquiring a finished home, or building from scratch, we guide you every step of the way.</p><div class="flex flex-wrap justify-center gap-3"><a href="/contact" class="gradient-gold text-navy px-8 py-2 rounded-md shadow-gold">Schedule a Consultation</a><a href="/properties" class="border border-white text-white px-8 py-2 rounded-md hover:bg-white hover:text-navy transition">Browse Listings</a></div></div></section>
 </main>
 
-<!-- UNIFIED FOOTER (same for all pages) -->
+<!-- UNIFIED FOOTER -->
 <footer class="bg-navy-deep text-white">
   <div class="container mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
     <div>
@@ -139,16 +139,83 @@
 <a href="https://wa.me/2347074404637?text=Hello%20Ashmil%20Homes%2C%20I'm%20interested%20in%20one%20of%20your%20properties" target="_blank" class="whatsapp-float"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp"></a>
 
 <script>
-  // Header scroll, mobile menu, loadFeatured properties, hero slider (copy from previous working code)
+  // Header scroll
   const header = document.getElementById('mainHeader');
   window.addEventListener('scroll', () => { if (window.scrollY > 50) header.classList.add('header-scrolled'); else header.classList.remove('header-scrolled'); });
-  // Mobile menu toggle (same as before)
-  const toggle = document.getElementById('menuToggle'), mobileMenu = document.getElementById('mobileMenu'), overlay = document.getElementById('overlay'), closeBtn = document.getElementById('closeMenu');
+  
+  // Mobile menu toggle
+  const toggle = document.getElementById('menuToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('closeMenu');
+  
   function openMenu() { mobileMenu.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
   function closeMenu() { mobileMenu.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
-  toggle?.addEventListener('click', openMenu); closeBtn?.addEventListener('click', closeMenu); overlay?.addEventListener('click', closeMenu);
-  async function loadFeatured() { try { const res = await fetch('/api/properties'); const props = await res.json(); const container = document.getElementById('featured-properties'); if (!props.length) { container.innerHTML = '<p class="col-span-full text-center text-gray-500">No properties yet.</p>'; return; } container.innerHTML = props.slice(0,3).map(p => `<div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition"><div class="relative h-64"><img src="${p.images?.[0] || '/assets/placeholder.jpg'}" class="w-full h-full object-cover"><span class="absolute top-3 right-3 bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full">${p.category}</span></div><div class="p-5"><div class="flex justify-between"><h3 class="font-serif text-xl font-bold">${p.title}</h3><span class="text-gold font-bold">₦${p.price}</span></div><p class="text-gray-500 text-sm mt-1">${p.location}</p><p class="text-gray-600 text-sm mt-2 line-clamp-2">${p.description}</p></div></div>`).join(''); } catch(err) { console.error(err); } }
-  let slideIndex = 0; const slides = document.querySelectorAll('.hero-slide'); const dots = document.querySelectorAll('.hero-dot'); function showSlide(n) { slides.forEach((s,i)=> s.style.opacity = i===n ? '1' : '0'); dots.forEach((d,i)=> d.className = i===n ? 'hero-dot w-10 h-1.5 rounded-full bg-gold' : 'hero-dot w-6 h-1.5 rounded-full bg-white/40'); } document.querySelector('.hero-prev')?.addEventListener('click',()=>{ slideIndex = (slideIndex-1+slides.length)%slides.length; showSlide(slideIndex); }); document.querySelector('.hero-next')?.addEventListener('click',()=>{ slideIndex = (slideIndex+1)%slides.length; showSlide(slideIndex); }); setInterval(()=>{ slideIndex = (slideIndex+1)%slides.length; showSlide(slideIndex); },5000); loadFeatured();
+  toggle?.addEventListener('click', openMenu);
+  closeBtn?.addEventListener('click', closeMenu);
+  overlay?.addEventListener('click', closeMenu);
+  
+  // Hero slider
+  let slideIndex = 0;
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.hero-dot');
+  function showSlide(n) { slides.forEach((s,i)=> s.style.opacity = i===n ? '1' : '0'); dots.forEach((d,i)=> d.className = i===n ? 'hero-dot w-10 h-1.5 rounded-full bg-gold' : 'hero-dot w-6 h-1.5 rounded-full bg-white/40'); }
+  document.querySelector('.hero-prev')?.addEventListener('click', ()=>{ slideIndex = (slideIndex-1+slides.length)%slides.length; showSlide(slideIndex); });
+  document.querySelector('.hero-next')?.addEventListener('click', ()=>{ slideIndex = (slideIndex+1)%slides.length; showSlide(slideIndex); });
+  setInterval(()=>{ slideIndex = (slideIndex+1)%slides.length; showSlide(slideIndex); }, 5000);
+  
+  // Featured properties (FIXED: uses p.id instead of p._id)
+  async function loadFeatured() {
+    try {
+      const res = await fetch('/api/properties');
+      const props = await res.json();
+      const container = document.getElementById('featured-properties');
+      
+      if (!props.length) {
+        container.innerHTML = '<p class="col-span-full text-center text-gray-500">No properties yet.</p>';
+        return;
+      }
+      
+      container.innerHTML = props.slice(0,3).map(p => {
+        // Use p.id (Supabase format)
+        const propertyId = p.id;
+        console.log('Featured Property:', p.title, 'ID:', propertyId);
+        
+        return `
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition">
+          <div class="relative h-64">
+            <img src="${p.images?.[0] || 'https://via.placeholder.com/800x600'}" class="w-full h-full object-cover">
+            <span class="absolute top-3 right-3 bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full">${p.category}</span>
+          </div>
+          <div class="p-5">
+            <div class="flex justify-between">
+              <h3 class="font-serif text-xl font-bold">${escapeHtml(p.title)}</h3>
+              <span class="text-gold font-bold">₦${p.price}</span>
+            </div>
+            <p class="text-gray-500 text-sm mt-1">${escapeHtml(p.location)}</p>
+            <p class="text-gray-600 text-sm mt-2 line-clamp-2">${escapeHtml(p.description)}</p>
+            <a href="/property-details?id=${propertyId}" class="inline-block mt-4 text-gold text-sm font-semibold hover:underline">View details →</a>
+          </div>
+        </div>
+      `}).join('');
+      
+    } catch(err) {
+      console.error('Error loading featured properties:', err);
+    }
+  }
+  
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+  
+  // Load featured properties on page load
+  loadFeatured();
 </script>
 </body>
 </html>
