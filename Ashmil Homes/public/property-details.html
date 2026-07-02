@@ -79,14 +79,20 @@
         
         <!-- Right Column - Details -->
         <div>
-          <h1 id="title" class="font-serif text-3xl md:text-4xl font-bold mb-2">Loading...</h1>
+          <h1 id="title" class="font-serif text-3xl md:text-4xl font-bold mb-2"></h1>
           <p class="text-gray-500 mb-2">
-            <span class="font-semibold">📍</span> <span id="locationText">Loading...</span>
+            <span class="font-semibold">📍</span> <span id="locationText"></span>
           </p>
-          <p id="price" class="text-2xl text-gold font-bold mb-4">₦0</p>
+          <p id="price" class="text-2xl text-gold font-bold mb-4"></p>
           <div id="specs" class="flex flex-wrap gap-4 mb-4 text-gray-700"></div>
           <div id="categoryBadge" class="mb-4"></div>
-          <p id="description" class="text-gray-600 leading-relaxed mb-6">Loading...</p>
+          <p id="description" class="text-gray-600 leading-relaxed mb-6"></p>
+          
+          <!-- Video Section -->
+          <div id="videoContainer" class="mt-4 hidden">
+            <h3 class="font-serif text-lg font-semibold mb-2">🎬 Property Video</h3>
+            <div id="videoPlayer" class="rounded-xl overflow-hidden"></div>
+          </div>
           
           <!-- Contact Section -->
           <div class="border-t pt-6 mt-4">
@@ -195,18 +201,118 @@
   closeBtn?.addEventListener('click', closeMenu);
   overlay?.addEventListener('click', closeMenu);
 
-  // Get property ID from URL
+  // ====== GET PROPERTY ID FROM URL ======
   const urlParams = new URLSearchParams(window.location.search);
   const propertyId = urlParams.get('id');
 
   console.log('🔍 Property ID from URL:', propertyId);
 
-  // Elements
+  // ====== ELEMENTS ======
   const loadingIndicator = document.getElementById('loadingIndicator');
   const propertyContent = document.getElementById('propertyContent');
   const errorMessage = document.getElementById('errorMessage');
 
-  // Check if we have an ID
+  // ====== FUNCTION TO DISPLAY PROPERTY ======
+  function displayProperty(property) {
+    console.log('✅ Displaying property:', property);
+    
+    // Hide loading, show content
+    loadingIndicator.style.display = 'none';
+    propertyContent.style.display = 'block';
+    errorMessage.style.display = 'none';
+    
+    // Title
+    document.getElementById('title').textContent = property.title || 'Untitled Property';
+    
+    // Location
+    document.getElementById('locationText').textContent = property.location || 'Location not specified';
+    
+    // Price
+    document.getElementById('price').textContent = property.price ? `₦${property.price}` : 'Price on request';
+    
+    // Description
+    document.getElementById('description').textContent = property.description || 'No description available.';
+    
+    // Main Image
+    const mainImage = document.getElementById('mainImage');
+    if (property.images && property.images.length > 0) {
+      mainImage.src = property.images[0];
+      mainImage.alt = property.title || 'Property';
+    } else {
+      mainImage.src = 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800';
+      mainImage.alt = 'Property image';
+    }
+    
+    // Specifications (bedrooms, bathrooms, area)
+    const specsDiv = document.getElementById('specs');
+    let specsHTML = '';
+    if (property.bedrooms) specsHTML += `<span>🛏️ ${property.bedrooms} beds</span>`;
+    if (property.bathrooms) specsHTML += `<span>🚿 ${property.bathrooms} baths</span>`;
+    if (property.area) specsHTML += `<span>📏 ${property.area}</span>`;
+    specsDiv.innerHTML = specsHTML || '<span class="text-gray-400">No specifications listed</span>';
+    
+    // Category Badge
+    const badgeDiv = document.getElementById('categoryBadge');
+    if (property.category) {
+      const categoryNames = {
+        'houses': '🏡 Houses',
+        'land': '🌾 Land',
+        'shortlets': '🏨 Shortlets',
+        'flats': '🏢 Flats'
+      };
+      badgeDiv.innerHTML = `<span class="bg-gold text-navy px-3 py-1 rounded-full text-sm font-semibold uppercase">${categoryNames[property.category] || property.category}</span>`;
+    }
+    
+    // Image Gallery (thumbnails)
+    const galleryDiv = document.getElementById('imageGallery');
+    if (property.images && property.images.length > 1) {
+      galleryDiv.innerHTML = property.images.slice(1, 6).map(img => `
+        <img src="${img}" class="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-75 border-2 border-transparent hover:border-gold transition" 
+             onclick="document.getElementById('mainImage').src='${img}'" alt="Property image">
+      `).join('');
+    } else {
+      galleryDiv.innerHTML = '';
+    }
+    
+    // Video
+    const videoContainer = document.getElementById('videoContainer');
+    const videoPlayer = document.getElementById('videoPlayer');
+    if (property.video) {
+      videoContainer.classList.remove('hidden');
+      const url = property.video;
+      let videoHTML = '';
+      
+      // YouTube embed
+      const ytMatch = url.match(/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) {
+        videoHTML = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen class="rounded-xl"></iframe>`;
+      } 
+      // YouTube watch URL
+      else if (url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/)) {
+        const id = url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/)[1];
+        videoHTML = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen class="rounded-xl"></iframe>`;
+      }
+      // Vimeo
+      else if (url.match(/vimeo\.com\/(\d+)/)) {
+        const id = url.match(/vimeo\.com\/(\d+)/)[1];
+        videoHTML = `<iframe width="100%" height="315" src="https://player.vimeo.com/video/${id}" frameborder="0" allowfullscreen class="rounded-xl"></iframe>`;
+      }
+      // Direct MP4/WebM
+      else if (url.match(/\.(mp4|webm|mov)$/i)) {
+        videoHTML = `<video controls class="w-full rounded-xl" style="max-height:500px;"><source src="${url}" type="video/mp4"></video>`;
+      }
+      // Generic embed fallback
+      else {
+        videoHTML = `<iframe width="100%" height="315" src="${url}" frameborder="0" allowfullscreen class="rounded-xl"></iframe>`;
+      }
+      
+      videoPlayer.innerHTML = videoHTML;
+    } else {
+      videoContainer.classList.add('hidden');
+    }
+  }
+
+  // ====== LOAD PROPERTY ======
   if (!propertyId) {
     // No ID - show error
     loadingIndicator.style.display = 'none';
@@ -227,63 +333,22 @@
         return response.json();
       })
       .then(property => {
-        console.log('✅ Property data received:', property);
-        
-        // Hide loading, show content
-        loadingIndicator.style.display = 'none';
-        propertyContent.style.display = 'block';
-        errorMessage.style.display = 'none';
-        
-        // Update the page with property data
-        document.getElementById('title').textContent = property.title || 'Untitled Property';
-        document.getElementById('locationText').textContent = property.location || 'Location not specified';
-        document.getElementById('price').textContent = `₦${property.price || '0'}`;
-        document.getElementById('description').textContent = property.description || 'No description available.';
-        
-        // Main image
-        const mainImage = document.getElementById('mainImage');
-        if (property.images && property.images.length > 0) {
-          mainImage.src = property.images[0];
-        } else {
-          mainImage.src = 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800';
+        // Check if property has data
+        if (!property || !property.id) {
+          throw new Error('Property not found');
         }
-        mainImage.alt = property.title || 'Property';
-        
-        // Specifications
-        const specsDiv = document.getElementById('specs');
-        let specsHTML = '';
-        if (property.bedrooms) specsHTML += `<span>🛏️ ${property.bedrooms} beds</span>`;
-        if (property.bathrooms) specsHTML += `<span>🚿 ${property.bathrooms} baths</span>`;
-        if (property.area) specsHTML += `<span>📏 ${property.area}</span>`;
-        specsDiv.innerHTML = specsHTML || '<span class="text-gray-400">No specifications listed</span>';
-        
-        // Category badge
-        const badgeDiv = document.getElementById('categoryBadge');
-        if (property.category) {
-          badgeDiv.innerHTML = `<span class="bg-gold text-navy px-3 py-1 rounded-full text-sm font-semibold uppercase">${property.category}</span>`;
-        }
-        
-        // Gallery (thumbnails)
-        const galleryDiv = document.getElementById('imageGallery');
-        if (property.images && property.images.length > 1) {
-          galleryDiv.innerHTML = property.images.slice(1, 6).map(img => `
-            <img src="${img}" class="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-75 border-2 border-transparent hover:border-gold" 
-                 onclick="document.getElementById('mainImage').src='${img}'" alt="Property image">
-          `).join('');
-        } else {
-          galleryDiv.innerHTML = '';
-        }
+        displayProperty(property);
       })
       .catch(error => {
         console.error('❌ Error loading property:', error);
         loadingIndicator.style.display = 'none';
         propertyContent.style.display = 'none';
         errorMessage.style.display = 'block';
-        document.getElementById('errorDetail').textContent = `Error: ${error.message}. Please refresh the page or try again later.`;
+        document.getElementById('errorDetail').textContent = error.message || 'Property not found. Please try again later.';
       });
   }
 
-  // Visit form submission
+  // ====== VISIT FORM SUBMISSION ======
   document.getElementById('visitForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     
