@@ -119,7 +119,7 @@
             <p class="text-gold font-bold">₦${p.price || '0'}</p>
             <p class="text-gray-500 text-sm">${p.location || 'Location not specified'}</p>
             <p class="text-gray-600 text-sm mt-2 line-clamp-2">${p.description || 'No description available.'}</p>
-            <a href="/property-details.html?id=${p._id}" class="inline-block mt-3 text-gold text-sm font-semibold hover:underline">View details →</a>
+            <a href="/property-details.html?id=${p.id}" class="inline-block mt-3 text-gold text-sm font-semibold hover:underline">View details →</a>
           </div>
         </div>
       `).join('');
