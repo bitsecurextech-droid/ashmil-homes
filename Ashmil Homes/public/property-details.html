@@ -30,7 +30,10 @@
       <div id="loading" class="text-center py-12">Loading property details...</div>
       <div id="error" class="text-center py-12 text-red-500 hidden">Property not found. Please go back and try again.</div>
       <div id="content" class="grid md:grid-cols-2 gap-8 hidden">
-        <div><img id="mainImage" src="" class="w-full h-96 object-cover rounded-xl shadow-md"></div>
+        <div>
+          <img id="mainImage" src="" class="w-full h-96 object-cover rounded-xl shadow-md">
+          <div id="imageGallery" class="flex gap-2 mt-4 overflow-x-auto pb-2"></div>
+        </div>
         <div>
           <h1 id="title" class="font-serif text-3xl md:text-4xl font-bold mb-2"></h1>
           <p id="location" class="text-gray-500 mb-2"><i data-lucide="map-pin" class="w-4 h-4 inline mr-1 text-gold"></i><span id="locationText"></span></p>
@@ -53,29 +56,41 @@
   // Get ID from URL
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
-  console.log('Property ID from URL:', id);
+  console.log('🔍 Property ID from URL:', id);
   
-  if (id) {
+  if (id && id !== 'undefined' && id !== 'null') {
     fetch(`/api/properties/${id}`)
       .then(res => {
-        console.log('Response status:', res.status);
+        console.log('📡 Response status:', res.status);
         if (!res.ok) throw new Error('Property not found');
         return res.json();
       })
       .then(p => {
-        console.log('Property data:', p);
+        console.log('✅ Property data loaded:', p);
+        
+        // Display property details
         document.getElementById('title').innerText = p.title || 'No title';
         document.getElementById('locationText').innerText = p.location || 'Unknown location';
         document.getElementById('price').innerText = p.price ? `₦${p.price}` : 'Price on request';
         document.getElementById('description').innerText = p.description || 'No description available.';
         document.getElementById('mainImage').src = p.images?.[0] || 'https://via.placeholder.com/800x600';
         
+        // Display specs
         let specs = '';
         if (p.bedrooms) specs += `<span><i data-lucide="bed-double" class="w-4 h-4 inline mr-1"></i> ${p.bedrooms} beds</span>`;
         if (p.bathrooms) specs += `<span><i data-lucide="bath" class="w-4 h-4 inline mr-1"></i> ${p.bathrooms} baths</span>`;
         if (p.area) specs += `<span><i data-lucide="maximize" class="w-4 h-4 inline mr-1"></i> ${p.area}</span>`;
         document.getElementById('specs').innerHTML = specs || '<span>No specs provided</span>';
         
+        // Display image gallery
+        if (p.images && p.images.length > 1) {
+          const gallery = document.getElementById('imageGallery');
+          gallery.innerHTML = p.images.map(img => `
+            <img src="${img}" class="w-20 h-20 object-cover rounded cursor-pointer border-2 border-transparent hover:border-gold transition" onclick="document.getElementById('mainImage').src='${img}'">
+          `).join('');
+        }
+        
+        // Display video
         if (p.video) {
           document.getElementById('videoContainer').classList.remove('hidden');
           const url = p.video;
@@ -102,14 +117,16 @@
         lucide.createIcons();
       })
       .catch(err => {
-        console.error('Error:', err);
+        console.error('❌ Error:', err);
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('error').classList.remove('hidden');
+        document.getElementById('error').innerText = err.message || 'Property not found. Please go back and try again.';
       });
   } else {
+    console.warn('⚠️ No valid property ID provided');
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('error').classList.remove('hidden');
-    document.getElementById('error').innerText = 'No property ID provided.';
+    document.getElementById('error').innerText = 'No property ID provided. Please go back and select a property.';
   }
 </script>
 </body>
