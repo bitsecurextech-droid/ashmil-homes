@@ -92,7 +92,7 @@
 
   <section class="py-20 bg-gray-50"><div class="container mx-auto px-4 text-center max-w-2xl mx-auto mb-12"><span class="text-gold text-xs uppercase tracking-wider">Why Choose Us</span><h2 class="font-serif text-3xl md:text-5xl font-bold mt-2">Tested. Trusted. Proven.</h2></div><div class="container mx-auto px-4 grid md:grid-cols-3 gap-6"><div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition"><div class="text-4xl mb-4">🏆</div><h3 class="font-serif text-xl font-semibold mb-2">Quality Construction</h3><p class="text-gray-600">Reputable engineers, premium materials, modern standards.</p></div><div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition"><div class="text-4xl mb-4">🛡️</div><h3 class="font-serif text-xl font-semibold mb-2">Verified Titles</h3><p class="text-gray-600">Genuine documents and transparent processes.</p></div><div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition"><div class="text-4xl mb-4">✨</div><h3 class="font-serif text-xl font-semibold mb-2">End-to-End Service</h3><p class="text-gray-600">Land acquisition, design, build, sale, and shortlets.</p></div></div></section>
 
-  <!-- Featured Listings -->
+  <!-- Featured Listings (FIXED: uses p.id) -->
   <section class="py-20"><div class="container mx-auto px-4"><div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4"><div><span class="text-gold text-xs uppercase tracking-wider">Featured Listings</span><h2 class="font-serif text-3xl md:text-5xl font-bold mt-2">Discover Your Next Home</h2></div><a href="/properties" class="border border-navy text-navy px-4 py-2 rounded-md hover:bg-navy hover:text-white transition">View All Properties →</a></div><div id="featured-properties" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div></div></section>
 
   <section class="relative py-20 bg-navy-deep text-white text-center"><div class="container mx-auto px-4 max-w-3xl"><div class="text-5xl mb-4">🏢</div><h2 class="font-serif text-3xl md:text-5xl font-bold mb-4">Build Your Dream Home With Us</h2><p class="text-white/80 mb-8">Whether you're buying land, acquiring a finished home, or building from scratch, we guide you every step of the way.</p><div class="flex flex-wrap justify-center gap-3"><a href="/contact" class="gradient-gold text-navy px-8 py-2 rounded-md shadow-gold">Schedule a Consultation</a><a href="/properties" class="border border-white text-white px-8 py-2 rounded-md hover:bg-white hover:text-navy transition">Browse Listings</a></div></div></section>
@@ -177,7 +177,7 @@
       }
       
       container.innerHTML = props.slice(0,3).map(p => {
-        // Use p.id (Supabase format)
+        // Use p.id (Supabase format) – this is the correct field!
         const propertyId = p.id;
         console.log('Featured Property:', p.title, 'ID:', propertyId);
         
