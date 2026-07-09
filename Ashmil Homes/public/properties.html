@@ -70,15 +70,22 @@
       }
       
       container.innerHTML = props.map(p => {
-        // Use p.id (Supabase returns id, not _id)
         const propertyId = p.id;
         console.log('Property:', p.title, 'ID:', propertyId);
+        
+        // Check if property has a video
+        const hasVideo = p.video && p.video.trim() !== '';
         
         return `
         <div class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-elegant transition-all duration-300 hover:-translate-y-1">
           <div class="relative h-64">
             <img src="${p.images?.[0] || 'https://via.placeholder.com/800x600'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+            
+            <!-- Category Badge (top right) -->
             <div class="absolute top-3 right-3 bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full shadow">${p.category}</div>
+            
+            <!-- Video Badge (top left) - Only show if property has video -->
+            ${hasVideo ? '<div class="absolute top-3 left-3 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow flex items-center gap-1"><i data-lucide="video" class="w-3 h-3"></i> Video</div>' : ''}
           </div>
           <div class="p-5">
             <div class="flex justify-between items-start">
