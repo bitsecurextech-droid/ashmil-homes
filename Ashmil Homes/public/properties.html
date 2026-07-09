@@ -76,10 +76,24 @@
         // Check if property has a video
         const hasVideo = p.video && p.video.trim() !== '';
         
+        // ====== FIX: Properly handle images ======
+        let imageUrl = 'https://via.placeholder.com/800x600?text=No+Image';
+        if (p.images) {
+          if (Array.isArray(p.images) && p.images.length > 0) {
+            imageUrl = p.images[0];
+          } else if (typeof p.images === 'string' && p.images.trim() !== '') {
+            imageUrl = p.images.trim();
+          } else if (typeof p.images === 'object') {
+            const values = Object.values(p.images).filter(s => s && s.trim() !== '');
+            if (values.length > 0) imageUrl = values[0];
+          }
+        }
+        console.log('📸 Image URL for', p.title, ':', imageUrl);
+        
         return `
         <div class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-elegant transition-all duration-300 hover:-translate-y-1">
           <div class="relative h-64">
-            <img src="${p.images?.[0] || 'https://via.placeholder.com/800x600'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+            <img src="${imageUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" onerror="this.src='https://via.placeholder.com/800x600?text=Image+Error'">
             
             <!-- Category Badge (top right) -->
             <div class="absolute top-3 right-3 bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full shadow">${p.category}</div>
