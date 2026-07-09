@@ -35,13 +35,8 @@
       <div id="content" class="grid md:grid-cols-2 gap-8 hidden">
         <!-- LEFT COLUMN: Image Gallery -->
         <div>
-          <!-- Main Image -->
           <img id="mainImage" src="" class="w-full h-96 object-cover rounded-xl shadow-md mb-3">
-          
-          <!-- Thumbnail Gallery (all images) -->
           <div id="imageGallery" class="flex gap-2 overflow-x-auto pb-2"></div>
-          
-          <!-- Image counter -->
           <p id="imageCounter" class="text-xs text-gray-400 mt-2"></p>
         </div>
         
@@ -103,7 +98,7 @@
         if (p.area) specs += `<span><i data-lucide="maximize" class="w-4 h-4 inline mr-1"></i> ${p.area}</span>`;
         document.getElementById('specs').innerHTML = specs || '<span>No specs provided</span>';
         
-        // ====== IMAGE GALLERY (SHOW ALL IMAGES) ======
+        // ====== IMAGE GALLERY ======
         const images = p.images || [];
         const mainImg = document.getElementById('mainImage');
         const gallery = document.getElementById('imageGallery');
@@ -114,11 +109,8 @@
           gallery.innerHTML = '<p class="text-gray-400 text-sm">No images uploaded</p>';
           counter.innerText = '0 images';
         } else {
-          // Set first image as main
           mainImg.src = images[0];
           counter.innerText = `${images.length} image${images.length > 1 ? 's' : ''}`;
-          
-          // Create thumbnails for ALL images
           gallery.innerHTML = '';
           images.forEach((img, index) => {
             const thumb = document.createElement('img');
@@ -126,9 +118,7 @@
             thumb.className = `thumbnail w-20 h-20 object-cover rounded-md ${index === 0 ? 'active border-gold' : 'border-gray-200'}`;
             thumb.onerror = () => { thumb.src = 'https://via.placeholder.com/80?text=Error'; };
             thumb.addEventListener('click', () => {
-              // Change main image
               mainImg.src = img;
-              // Update active thumbnail
               document.querySelectorAll('.thumbnail').forEach(t => {
                 t.classList.remove('active', 'border-gold');
                 t.classList.add('border-gray-200');
@@ -140,23 +130,41 @@
           });
         }
         
-        // ====== VIDEO (YouTube) ======
-        if (p.video) {
+        // ====== VIDEO (Clean YouTube embed) ======
+        if (p.video && p.video.trim() !== '') {
           document.getElementById('videoContainer').classList.remove('hidden');
-          const url = p.video;
+          let videoUrl = p.video.trim();
+          
+          // If it's an iframe code, extract the src URL
+          if (videoUrl.includes('<iframe')) {
+            const srcMatch = videoUrl.match(/src="([^"]+)"/);
+            if (srcMatch) {
+              videoUrl = srcMatch[1];
+            }
+          }
+          
+          // Clean YouTube URL: remove si= and other tracking params
+          if (videoUrl.includes('youtube.com/embed/')) {
+            const cleanUrl = videoUrl.split('?')[0]; // Remove everything after ?
+            videoUrl = cleanUrl;
+          }
+          
+          console.log('🎬 Clean video URL:', videoUrl);
+          
+          // Build the embed HTML
           let html = '';
           
-          // Extract YouTube video ID from various URL formats
-          const ytRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/;
-          const match = url.match(ytRegex);
-          
-          if (match) {
-            const videoId = match[1];
-            // Embed with clickable YouTube link overlay
+          // YouTube embed
+          const ytMatch = videoUrl.match(/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+          if (ytMatch) {
+            const videoId = ytMatch[1];
             html = `
-              <div class="relative">
-                <iframe width="100%" height="400" src="https://www.youtube.com/embed/${videoId}" 
-                  frameborder="0" allowfullscreen class="rounded-xl shadow-md"></iframe>
+              <div class="relative aspect-video">
+                <iframe src="https://www.youtube.com/embed/${videoId}" 
+                  frameborder="0" allowfullscreen 
+                  class="w-full h-full rounded-xl shadow-md"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                </iframe>
                 <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" 
                   class="absolute bottom-4 right-4 bg-black/70 text-white text-sm px-4 py-2 rounded-full hover:bg-black/90 transition flex items-center gap-2">
                   <i data-lucide="external-link" class="w-4 h-4"></i> Watch on YouTube
@@ -165,7 +173,7 @@
             `;
           } else {
             // Fallback: direct embed
-            html = `<iframe width="100%" height="400" src="${url}" frameborder="0" allowfullscreen class="rounded-xl shadow-md"></iframe>`;
+            html = `<iframe src="${videoUrl}" frameborder="0" allowfullscreen class="w-full aspect-video rounded-xl shadow-md"></iframe>`;
           }
           
           document.getElementById('videoPlayer').innerHTML = html;
