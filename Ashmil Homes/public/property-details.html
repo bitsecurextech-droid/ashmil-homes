@@ -13,6 +13,9 @@
     .bg-navy-deep { background-color: #051020; }
     .text-gold { color: #D4AF37; }
     .gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); }
+    .thumbnail { cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+    .thumbnail:hover { border-color: #D4AF37; transform: scale(1.05); }
+    .thumbnail.active { border-color: #D4AF37; }
   </style>
 </head>
 <body>
@@ -28,20 +31,44 @@
   <div id="details" class="bg-white rounded-2xl shadow-xl overflow-hidden">
     <div class="p-6 md:p-8">
       <div id="loading" class="text-center py-12">Loading property details...</div>
-      <div id="error" class="text-center py-12 text-red-500 hidden">Property not found. Please go back and try again.</div>
+      <div id="error" class="text-center py-12 text-red-500 hidden">Property not found.</div>
       <div id="content" class="grid md:grid-cols-2 gap-8 hidden">
+        <!-- LEFT COLUMN: Image Gallery -->
         <div>
-          <img id="mainImage" src="" class="w-full h-96 object-cover rounded-xl shadow-md">
-          <div id="imageGallery" class="flex gap-2 mt-4 overflow-x-auto pb-2"></div>
+          <!-- Main Image -->
+          <img id="mainImage" src="" class="w-full h-96 object-cover rounded-xl shadow-md mb-3">
+          
+          <!-- Thumbnail Gallery (all images) -->
+          <div id="imageGallery" class="flex gap-2 overflow-x-auto pb-2"></div>
+          
+          <!-- Image counter -->
+          <p id="imageCounter" class="text-xs text-gray-400 mt-2"></p>
         </div>
+        
+        <!-- RIGHT COLUMN: Property Info -->
         <div>
           <h1 id="title" class="font-serif text-3xl md:text-4xl font-bold mb-2"></h1>
           <p id="location" class="text-gray-500 mb-2"><i data-lucide="map-pin" class="w-4 h-4 inline mr-1 text-gold"></i><span id="locationText"></span></p>
           <p id="price" class="text-2xl text-gold font-bold mb-4"></p>
           <div id="specs" class="flex gap-4 mb-4 text-gray-700"></div>
           <p id="description" class="text-gray-600 leading-relaxed mb-6"></p>
-          <div id="videoContainer" class="mt-4 hidden"><h3 class="font-serif text-lg font-semibold mb-2"><i data-lucide="video" class="w-5 h-5 inline mr-2 text-gold"></i>Property Video</h3><div id="videoPlayer" class="rounded-xl overflow-hidden"></div></div>
-          <div class="border-t pt-6 mt-4"><h3 class="font-serif text-xl font-semibold mb-4">Interested?</h3><p class="text-gray-600 mb-4">Speak directly with our team to schedule an inspection or request more details.</p><div class="flex flex-wrap gap-4"><a href="tel:07074404637" class="gradient-gold text-navy px-5 py-2 rounded-md font-semibold shadow-md flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i> Call us (0707 440 4637)</a><a href="tel:09023967106" class="border border-navy text-navy px-5 py-2 rounded-md font-semibold hover:bg-navy hover:text-white flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i> Alt. line (0902 396 7106)</a><a href="mailto:Ashmilhomesnigerialimited@gmail.com" class="border border-gold text-gold px-5 py-2 rounded-md font-semibold flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"></i> Email Us</a></div></div>
+          
+          <!-- Video Section -->
+          <div id="videoContainer" class="mt-4 hidden">
+            <h3 class="font-serif text-lg font-semibold mb-2"><i data-lucide="video" class="w-5 h-5 inline mr-2 text-gold"></i>Property Video</h3>
+            <div id="videoPlayer" class="rounded-xl overflow-hidden"></div>
+          </div>
+          
+          <!-- CTA -->
+          <div class="border-t pt-6 mt-4">
+            <h3 class="font-serif text-xl font-semibold mb-4">Interested?</h3>
+            <p class="text-gray-600 mb-4">Speak directly with our team to schedule an inspection or request more details.</p>
+            <div class="flex flex-wrap gap-4">
+              <a href="tel:07074404637" class="gradient-gold text-navy px-5 py-2 rounded-md font-semibold shadow-md flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i> Call us (0707 440 4637)</a>
+              <a href="tel:09023967106" class="border border-navy text-navy px-5 py-2 rounded-md font-semibold hover:bg-navy hover:text-white flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i> Alt. line (0902 396 7106)</a>
+              <a href="mailto:Ashmilhomesnigerialimited@gmail.com" class="border border-gold text-gold px-5 py-2 rounded-md font-semibold flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"></i> Email Us</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -53,63 +80,96 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   
-  // Get ID from URL
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
-  console.log('🔍 Property ID from URL:', id);
+  console.log('🔍 Property ID:', id);
   
   if (id && id !== 'undefined' && id !== 'null') {
     fetch(`/api/properties/${id}`)
-      .then(res => {
-        console.log('📡 Response status:', res.status);
-        if (!res.ok) throw new Error('Property not found');
-        return res.json();
-      })
+      .then(res => res.json())
       .then(p => {
-        console.log('✅ Property data loaded:', p);
+        console.log('✅ Property loaded:', p);
         
-        // Display property details
+        // Basic info
         document.getElementById('title').innerText = p.title || 'No title';
         document.getElementById('locationText').innerText = p.location || 'Unknown location';
         document.getElementById('price').innerText = p.price ? `₦${p.price}` : 'Price on request';
         document.getElementById('description').innerText = p.description || 'No description available.';
-        document.getElementById('mainImage').src = p.images?.[0] || 'https://via.placeholder.com/800x600';
         
-        // Display specs
+        // Specs
         let specs = '';
         if (p.bedrooms) specs += `<span><i data-lucide="bed-double" class="w-4 h-4 inline mr-1"></i> ${p.bedrooms} beds</span>`;
         if (p.bathrooms) specs += `<span><i data-lucide="bath" class="w-4 h-4 inline mr-1"></i> ${p.bathrooms} baths</span>`;
         if (p.area) specs += `<span><i data-lucide="maximize" class="w-4 h-4 inline mr-1"></i> ${p.area}</span>`;
         document.getElementById('specs').innerHTML = specs || '<span>No specs provided</span>';
         
-        // Display image gallery
-        if (p.images && p.images.length > 1) {
-          const gallery = document.getElementById('imageGallery');
-          gallery.innerHTML = p.images.map(img => `
-            <img src="${img}" class="w-20 h-20 object-cover rounded cursor-pointer border-2 border-transparent hover:border-gold transition" onclick="document.getElementById('mainImage').src='${img}'">
-          `).join('');
+        // ====== IMAGE GALLERY (SHOW ALL IMAGES) ======
+        const images = p.images || [];
+        const mainImg = document.getElementById('mainImage');
+        const gallery = document.getElementById('imageGallery');
+        const counter = document.getElementById('imageCounter');
+        
+        if (images.length === 0) {
+          mainImg.src = 'https://via.placeholder.com/800x600?text=No+Images';
+          gallery.innerHTML = '<p class="text-gray-400 text-sm">No images uploaded</p>';
+          counter.innerText = '0 images';
+        } else {
+          // Set first image as main
+          mainImg.src = images[0];
+          counter.innerText = `${images.length} image${images.length > 1 ? 's' : ''}`;
+          
+          // Create thumbnails for ALL images
+          gallery.innerHTML = '';
+          images.forEach((img, index) => {
+            const thumb = document.createElement('img');
+            thumb.src = img;
+            thumb.className = `thumbnail w-20 h-20 object-cover rounded-md ${index === 0 ? 'active border-gold' : 'border-gray-200'}`;
+            thumb.onerror = () => { thumb.src = 'https://via.placeholder.com/80?text=Error'; };
+            thumb.addEventListener('click', () => {
+              // Change main image
+              mainImg.src = img;
+              // Update active thumbnail
+              document.querySelectorAll('.thumbnail').forEach(t => {
+                t.classList.remove('active', 'border-gold');
+                t.classList.add('border-gray-200');
+              });
+              thumb.classList.add('active', 'border-gold');
+              thumb.classList.remove('border-gray-200');
+            });
+            gallery.appendChild(thumb);
+          });
         }
         
-        // Display video
+        // ====== VIDEO (YouTube) ======
         if (p.video) {
           document.getElementById('videoContainer').classList.remove('hidden');
           const url = p.video;
           let html = '';
-          const ytMatch = url.match(/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
-          if (ytMatch) {
-            html = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen class="rounded-xl"></iframe>`;
-          } else if (url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/)) {
-            const id2 = url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/)[1];
-            html = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${id2}" frameborder="0" allowfullscreen class="rounded-xl"></iframe>`;
-          } else if (url.match(/vimeo\.com\/(\d+)/)) {
-            const id2 = url.match(/vimeo\.com\/(\d+)/)[1];
-            html = `<iframe width="100%" height="315" src="https://player.vimeo.com/video/${id2}" frameborder="0" allowfullscreen class="rounded-xl"></iframe>`;
-          } else if (url.match(/\.(mp4|webm|mov)$/i)) {
-            html = `<video controls class="w-full rounded-xl" style="max-height:500px;"><source src="${url}" type="video/mp4"></video>`;
+          
+          // Extract YouTube video ID from various URL formats
+          const ytRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/;
+          const match = url.match(ytRegex);
+          
+          if (match) {
+            const videoId = match[1];
+            // Embed with clickable YouTube link overlay
+            html = `
+              <div class="relative">
+                <iframe width="100%" height="400" src="https://www.youtube.com/embed/${videoId}" 
+                  frameborder="0" allowfullscreen class="rounded-xl shadow-md"></iframe>
+                <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" 
+                  class="absolute bottom-4 right-4 bg-black/70 text-white text-sm px-4 py-2 rounded-full hover:bg-black/90 transition flex items-center gap-2">
+                  <i data-lucide="external-link" class="w-4 h-4"></i> Watch on YouTube
+                </a>
+              </div>
+            `;
           } else {
-            html = `<iframe width="100%" height="315" src="${url}" frameborder="0" allowfullscreen class="rounded-xl"></iframe>`;
+            // Fallback: direct embed
+            html = `<iframe width="100%" height="400" src="${url}" frameborder="0" allowfullscreen class="rounded-xl shadow-md"></iframe>`;
           }
+          
           document.getElementById('videoPlayer').innerHTML = html;
+          lucide.createIcons();
         }
         
         document.getElementById('loading').classList.add('hidden');
@@ -120,13 +180,12 @@
         console.error('❌ Error:', err);
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('error').classList.remove('hidden');
-        document.getElementById('error').innerText = err.message || 'Property not found. Please go back and try again.';
+        document.getElementById('error').innerText = 'Property not found. Please go back and try again.';
       });
   } else {
-    console.warn('⚠️ No valid property ID provided');
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('error').classList.remove('hidden');
-    document.getElementById('error').innerText = 'No property ID provided. Please go back and select a property.';
+    document.getElementById('error').innerText = 'No property ID provided.';
   }
 </script>
 </body>
